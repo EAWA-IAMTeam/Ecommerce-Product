@@ -19,8 +19,30 @@ products_data = [
     {"id": 9, "name": "Monitor", "description": "Ultra-wide 4K monitor", "platform": "Tiktok", "stock": 25, "sku": "MN44556", "currency": "USD", "price": 349.99, "status": "available", "created_at": "2025-01-23 10:00:00", "updated_at": "2025-01-23 10:00:00"}
 ]
 
+stockItem_data = [
+    {"id": 1, "company_id": 10002, "stock_code": "laptop/lenovo", "stock_control": True, "ref_cost": 99.99, "weight": 11.1, "height": 11.1, "width": 11.1, "length": 11.1, "variation1": "variation1", "variation2": "variation2", "reserved_quantity": 10, "quantity": 100, "created_at": "2025-01-23 10:00:00", "updated_at": "2025-01-23 10:00:00", "platform": "Lazada", "description": "Next-gen gaming console", "status": True},
+    {"id": 2, "company_id": 10002, "stock_code": "tablet/samsung", "stock_control": True, "ref_cost": 199.99, "weight": 0.5, "height": 7.8, "width": 5.5, "length": 0.3, "variation1": "color", "variation2": "storage", "reserved_quantity": 5, "quantity": 50, "created_at": "2025-01-23 10:10:00", "updated_at": "2025-01-23 10:10:00", "platform": "Shopee", "description": "Portable tablet for work and play", "status": True},
+    {"id": 3, "company_id": 10002, "stock_code": "phone/apple", "stock_control": True, "ref_cost": 899.99, "weight": 0.3, "height": 6.2, "width": 2.8, "length": 0.3, "variation1": "color", "variation2": "model", "reserved_quantity": 2, "quantity": 30, "created_at": "2025-01-23 10:20:00", "updated_at": "2025-01-23 10:20:00", "platform": "TikTok", "description": "Latest Apple smartphone", "status": True},
+    {"id": 4, "company_id": 3, "stock_code": "tv/samsung", "stock_control": True, "ref_cost": 499.99, "weight": 5.5, "height": 42, "width": 60, "length": 3, "variation1": "size", "variation2": "resolution", "reserved_quantity": 8, "quantity": 40, "created_at": "2025-01-23 10:30:00", "updated_at": "2025-01-23 10:30:00", "platform": "Lazada", "description": "Ultra HD Smart TV", "status": True},
+    {"id": 5, "company_id": 3, "stock_code": "headphones/bose", "stock_control": True, "ref_cost": 299.99, "weight": 0.5, "height": 7.5, "width": 7.5, "length": 2.5, "variation1": "color", "variation2": "type", "reserved_quantity": 3, "quantity": 25, "created_at": "2025-01-23 10:40:00", "updated_at": "2025-01-23 10:40:00", "platform": "Shopee", "description": "Noise-cancelling headphones", "status": True},
+    {"id": 6, "company_id": 10002, "stock_code": "smartwatch/apple", "stock_control": True, "ref_cost": 199.99, "weight": 0.2, "height": 4.5, "width": 4.5, "length": 0.5, "variation1": "band", "variation2": "color", "reserved_quantity": 4, "quantity": 20, "created_at": "2025-01-23 10:50:00", "updated_at": "2025-01-23 10:50:00", "platform": "TikTok", "description": "Smartwatch with health tracking", "status": True},
+    {"id": 7, "company_id": 1, "stock_code": "keyboard/logitech", "stock_control": True, "ref_cost": 79.99, "weight": 1.0, "height": 4.5, "width": 17, "length": 0.8, "variation1": "layout", "variation2": "color", "reserved_quantity": 1, "quantity": 15, "created_at": "2025-01-23 11:00:00", "updated_at": "2025-01-23 11:00:00", "platform": "Lazada", "description": "Mechanical keyboard", "status": True},
+    {"id": 8, "company_id": 1, "stock_code": "mouse/razer", "stock_control": True, "ref_cost": 49.99, "weight": 0.3, "height": 4.0, "width": 6.0, "length": 1.5, "variation1": "color", "variation2": "type", "reserved_quantity": 0, "quantity": 12, "created_at": "2025-01-23 11:10:00", "updated_at": "2025-01-23 11:10:00", "platform": "Shopee", "description": "High-precision gaming mouse", "status": True},
+    {"id": 9, "company_id": 10002, "stock_code": "monitor/dell", "stock_control": True, "ref_cost": 219.99, "weight": 3.5, "height": 16, "width": 24, "length": 5, "variation1": "size", "variation2": "resolution", "reserved_quantity": 6, "quantity": 18, "created_at": "2025-01-23 11:20:00", "updated_at": "2025-01-23 11:20:00", "platform": "TikTok", "description": "Full HD Monitor", "status": True},
+    {"id": 10, "company_id": 1, "stock_code": "speakers/jbl", "stock_control": True, "ref_cost": 129.99, "weight": 1.2, "height": 7, "width": 7, "length": 7, "variation1": "color", "variation2": "type", "reserved_quantity": 4, "quantity": 22, "created_at": "2025-01-23 11:30:00", "updated_at": "2025-01-23 11:30:00", "platform": "Lazada", "description": "Portable Bluetooth speakers", "status": True}
+]
+
 app = Flask(__name__)
 CORS(app)
+
+@app.route('/api/stock_items/company/<int:company_id>', methods=['GET'])
+def stock_items_by_company(company_id):
+    # Filter stock items based on company_id
+    filtered_stock_items = [item for item in stockItem_data if item['company_id'] == company_id]
+    if filtered_stock_items:
+        return jsonify(filtered_stock_items), 200
+    else:
+        return jsonify({'error': 'Stock items not found for the given company_id'}), 404
 
 # Helper function to fetch product by ID
 def get_product_by_id(product_id):

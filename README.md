@@ -1,102 +1,82 @@
-## API Endpoints
+# Product and API Integration
 
-### 1. Get All Products
+This project consists of multiple components, including a Go SDK that integrates with Lazada, a Flask-based Python API that serves various endpoints for fetching platform products, and a Flutter application that interacts with the API to display data, including stock items from SQL accounts and Lazada products for mapping purposes.
 
-**Endpoint:** `http://192.168.0.73:5000/api/products`
+### Components
 
-**Method:** `GET`
+1. **iop-sdk-go**:
 
-Fetches all products in the database.
+   - A Go SDK that integrates with Lazada's API to retrieve product data.
+   - Provides functionality to interact with Lazada's product API endpoints.
 
-Example Response:
+2. **api-endpoint.py**:
 
-```json
-[
-  {
-    "id": 1,
-    "name": "Smartphone",
-    "description": "Latest model smartphone with advanced features",
-    "platform": "Shopee",
-    "stock": 100,
-    "sku": "SM12345",
-    "currency": "USD",
-    "price": 799.99,
-    "status": "available",
-    "created_at": "2025-01-23 10:00:00",
-    "updated_at": "2025-01-23 10:00:00"
-  },
-  ...
-]
-```
+   - A Python script that utilizes Flask to expose the following API endpoints:
+     - **Get all platform products**
+     - **Get platform product by ID**
+     - **Get stock items by company ID from SQL**
+     - **Shopee access token API** for authentication.
 
-### 2. Get Product by ID
+3. **Flutter Application**:
+   - A Flutter app that consumes the API to display Lazada products and stock items from SQL accounts for mapping purposes.
+     ![Product Mapping Interface](/img/mapping-with-data.png)
 
-**Endpoint:** `http://192.168.0.73:5000/api/products/<product_id>`
+### API Endpoints
 
-**Method:** `GET`
+#### 1. **Get Stock Items by Company ID**
 
-Fetches a single product by ID.
+- **Endpoint**: `http://192.168.0.73:5000/api/stock_items/company/<company_id>`
+- **Method**: `GET`
+- **Description**: Retrieves stock items based on the company ID from the SQL-based accounting system.
+- **Parameters**:
+  - `company_id` (path parameter): The ID of the company for which stock items are being retrieved.
 
-Example Response:
+#### 2. **Lazada Get Product API**
 
-```json
-{
-  "id": 1,
-  "name": "Smartphone",
-  "description": "Latest model smartphone with advanced features",
-  "platform": "Shopee",
-  "stock": 100,
-  "sku": "SM12345",
-  "currency": "USD",
-  "price": 799.99,
-  "status": "available",
-  "created_at": "2025-01-23 10:00:00",
-  "updated_at": "2025-01-23 10:00:00"
-}
-```
+- **Endpoint**: `http://192.168.0.73:7000/products`
+- **Method**: `GET`
+- **Description**: Retrieves a list of products from Lazada.
 
-### 3. Shopee Authentication
+#### 3. **Shopee Access Token API**
 
-**Endpoint:** `http://192.168.0.73:5000/api/shopee_auth`
+- **Endpoint**: `http://192.168.0.73:5000/api/shopee_auth`
+- **Method**: `POST`
+- **Description**: Authenticates and retrieves an access token from Shopee.
 
-**Method:** `POST`
+##### Required Parameters:
 
-Authenticate with Shopee using either the **shop ID** or **main account ID** along with the necessary parameters.
+To authenticate with Shopee, you can use either the **shop ID** or **main account ID**, along with the necessary authentication parameters. Refer to the image below for the full list of required parameters.
 
-![alt text](shopee-auth-params.png)
+- **Option 1: Authenticate Using `shop_id`**:
+  Provide the following parameters in the request body:
 
-#### Option 1: Authenticate using `shop_id`
+  - `shop_id`: Your shop ID.
+  - `sign`: The signature generated for authentication.
+  - `partner_id`: The partner ID assigned to your application.
+  - `timestamp`: The timestamp of the request.
+  - `code`: The authorization code.
 
-To authenticate using the **shop ID**, provide the `shop_id` in the request body along with the required parameters like `sign`, `partner_id`, `timestamp`, and `code`.
+- **Option 2: Authenticate Using `main_account_id`**:
+  Provide the following parameters in the request body:
 
-Example Request Body:
+  - `main_account_id`: Your main account ID.
+  - `sign`: The signature generated for authentication.
+  - `partner_id`: The partner ID assigned to your application.
+  - `timestamp`: The timestamp of the request.
+  - `code`: The authorization code.
 
-```json
-{
-  "sign": "signature_example",
-  "partner_id": "partner_123",
-  "timestamp": 1674518400,
-  "code": "auth_code_example",
-  "shop_id": "shop_1"
-}
-```
+  ![Shopee Auth Params](/img/shopee-auth-params.png)
 
-#### Option 2: Authenticate using `main_account_id`
+#### 4. **Get All Products**
 
-Alternatively, authenticate using the **main account ID** by providing `main_account_id` in the request body along with the necessary parameters.
+- **Endpoint**: `http://192.168.0.73:5000/api/products`
+- **Method**: `GET`
+- **Description**: Retrieves all products from the platform.
 
-Example Request Body:
+#### 5. **Get Product by ID**
 
-```json
-{
-  "id": "1",
-  "request_id": "12345",
-  "error": "none",
-  "refresh_token": "refresh_token_abc123",
-  "access_token": "access_token_xyz789",
-  "expire_in": "3600",
-  "message": "Success",
-  "merchant_id_list": ["merchant_1", "merchant_2"],
-  "shop_id_list": ["shop_1", "shop_2"]
-}
-```
+- **Endpoint**: `http://192.168.0.73:5000/api/products/<product_id>`
+- **Method**: `GET`
+- **Description**: Fetches a specific product by its ID from the platform.
+- **Parameters**:
+  - `product_id` (path parameter): The ID of the product to fetch.
