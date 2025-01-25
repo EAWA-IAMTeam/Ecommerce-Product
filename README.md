@@ -1,6 +1,5 @@
 > [!NOTE]  
-> Go SDK for Lazada Open API might use new app secret and access token if expired
-> For the response of lazada products, one product might have one or many skus, need to handle it properly during mapping and writing into database
+> Go SDK for Lazada Open API might use new app secret and access token if expired. For the response of lazada products, one product might have one or many skus, need to handle it properly during mapping and writing into database
 
 # Product and API Integration
 
