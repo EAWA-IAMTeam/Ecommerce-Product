@@ -1,6 +1,10 @@
+> [!NOTE]  
+> Go SDK for Lazada Open API might use new app secret and access token if expired
+> For the response of lazada products, one product might have one or many skus, need to handle it properly during mapping and writing into database
+
 # Product and API Integration
 
-This project consists of multiple components, including a Go SDK that integrates with Lazada, a Flask-based Python API that serves various endpoints for fetching platform products, and a Flutter application that interacts with the API to display data, including stock items from SQL accounts and Lazada products for mapping purposes.
+This project consists of multiple components, including a Go SDK that integrates with Lazada, a Flask-based Python API that serves various endpoints for fetching SQL Account Stock Items by Company, and a Flutter application that interacts with the API to display data, including stock items from SQL accounts and Lazada products for mapping purposes.
 
 ### Components
 
@@ -12,14 +16,15 @@ This project consists of multiple components, including a Go SDK that integrates
 2. **api-endpoint.py**:
 
    - A Python script that utilizes Flask to expose the following API endpoints:
-     - **Get all platform products**
-     - **Get platform product by ID**
-     - **Get stock items by company ID from SQL**
+     - **Get stock items by company ID from SQL Account in the Database**
      - **Shopee access token API** for authentication.
+     - **Insert products after mapping** according to store id
+     - **Retrieve products that have done mapping** according to store id
 
 3. **Flutter Application**:
    - A Flutter app that consumes the API to display Lazada products and stock items from SQL accounts for mapping purposes.
      ![Product Mapping Interface](/img/mapping-with-data.png)
+     ![Mapped Products Interface](/img/mapped-product.png)
 
 ### API Endpoints
 
@@ -67,16 +72,14 @@ To authenticate with Shopee, you can use either the **shop ID** or **main accoun
 
   ![Shopee Auth Params](/img/shopee-auth-params.png)
 
-#### 4. **Get All Products**
+#### 4. **Insert Products API**
 
 - **Endpoint**: `http://192.168.0.73:5000/api/products`
 - **Method**: `GET`
-- **Description**: Retrieves all products from the platform.
+- **Description**: Insert Products that have done mapping
 
-#### 5. **Get Product by ID**
+#### 5. **Get Products API**
 
-- **Endpoint**: `http://192.168.0.73:5000/api/products/<product_id>`
-- **Method**: `GET`
-- **Description**: Fetches a specific product by its ID from the platform.
-- **Parameters**:
-  - `product_id` (path parameter): The ID of the product to fetch.
+- **Endpoint**: `http://192.168.0.73:5000/api/products`
+- **Method**: `POST`
+- **Description**: Select Products that have done mapping by store

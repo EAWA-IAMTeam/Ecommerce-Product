@@ -12,7 +12,7 @@ var client *iop.IopClient
 
 func init() {
 	appKey := "131165"
-	appSecret := "abLdom8jDX3hgh3p23DeeJFa5XSXeFwB"
+	appSecret := "0XTLuKkYYtdMhahQn8fQxehaXXSJOv5x"
 
 	clientOptions := iop.ClientOptions{
 		APIKey:    appKey,
@@ -21,7 +21,7 @@ func init() {
 	}
 
 	client = iop.NewClient(&clientOptions)
-	client.SetAccessToken("50000001c28clcgXddQ4nzUdiEtGYDRz9hYmQxcL1d3cbc89oWqmqyaeubxzvXOK")
+	client.SetAccessToken("50000001c15clcgXddQ4nzUdiEt1974f9d1GYDRz9hYmQxcLoWqmqyaeubxzvXOK")
 }
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -62,7 +62,7 @@ func main() {
 	r.GET("/products", getProducts)
 
 	// Replace "0.0.0.0" with your machine's local IP address
-	serverAddress := "192.168.0.73:7000" // Bind to all network interfaces
+	serverAddress := "192.168.0.73:7000" // change according to your ip address and port	
 
 	log.Printf("Server running on http://%s", serverAddress)
 	if err := r.Run(serverAddress); err != nil {
