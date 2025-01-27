@@ -34,6 +34,25 @@ class _LinkProductPageState extends State<LinkProductPage> {
   dynamic selectedSQLProduct; // To store the whole SQL product object
   Set<dynamic> selectedPlatformProducts =
       {}; // To store the whole platform product objects
+  List<dynamic> filteredProducts = [];
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    filteredProducts = platformProducts;
+  }
+
+  void updateSearchQuery(String query) {
+    setState(() {
+      searchQuery = query;
+      filteredProducts = platformProducts.where((product) {
+        final skus = product['skus'] as List<dynamic>;
+        return skus.any((sku) =>
+            sku['ShopSku'].toLowerCase().contains(query.toLowerCase()));
+      }).toList();
+    });
+  }
 
   Future<void> fetchSQLProducts() async {
     final response = await http.get(Uri.parse(
@@ -56,6 +75,7 @@ class _LinkProductPageState extends State<LinkProductPage> {
       final data = json.decode(response.body);
       setState(() {
         platformProducts = data['data']['products'];
+        filteredProducts = platformProducts;
       });
     } else {
       print('Failed to load platform products');
@@ -161,7 +181,7 @@ class _LinkProductPageState extends State<LinkProductPage> {
                     ),
                   ),
                   VerticalDivider(),
-                  // Platform Products List (unchanged)
+
                   Expanded(
                     child: Column(
                       children: [
@@ -173,77 +193,84 @@ class _LinkProductPageState extends State<LinkProductPage> {
                           onPressed: fetchPlatformProducts,
                           child: Text('Fetch Platform Products'),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            onChanged: updateSearchQuery,
+                            decoration: InputDecoration(
+                              labelText: 'Search by ShopSku',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
                         Expanded(
-                          child: platformProducts.isEmpty
+                          child: filteredProducts.isEmpty
                               ? Center(child: Text('No Data'))
                               : ListView.builder(
-                                  itemCount: platformProducts.length,
+                                  itemCount: filteredProducts.length,
                                   itemBuilder: (context, index) {
-                                    final product = platformProducts[index];
+                                    final product = filteredProducts[index];
                                     final skus =
                                         product['skus'] as List<dynamic>;
 
-                                    // Safely get the short description
-                                    final shortDescription =
-                                        product['attributes']
-                                            ['short_description'];
-                                    final plainTextDescription =
-                                        shortDescription != null
-                                            ? html_parser
-                                                    .parse(shortDescription)
-                                                    .documentElement
-                                                    ?.text
-                                                    ?.trim() ??
-                                                ''
-                                            : 'No description available';
-
-                                    return GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          if (selectedPlatformProducts.contains(
-                                              platformProducts[index])) {
-                                            selectedPlatformProducts.remove(
-                                                platformProducts[index]);
-                                          } else {
-                                            selectedPlatformProducts
-                                                .add(platformProducts[index]);
-                                          }
-                                        });
-                                      },
-                                      child: Card(
-                                        margin:
-                                            EdgeInsets.symmetric(vertical: 8.0),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              // Common attributes
-                                              Row(
+                                    return Column(
+                                      children: skus.map<Widget>((sku) {
+                                        return GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              if (selectedPlatformProducts
+                                                  .contains(sku)) {
+                                                selectedPlatformProducts
+                                                    .remove(sku);
+                                              } else {
+                                                selectedPlatformProducts
+                                                    .add(sku);
+                                              }
+                                            });
+                                          },
+                                          child: Card(
+                                            margin: EdgeInsets.symmetric(
+                                                vertical: 8.0),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(16.0),
+                                              child: Row(
                                                 children: [
                                                   Checkbox(
                                                     value:
                                                         selectedPlatformProducts
-                                                            .contains(
-                                                                platformProducts[
-                                                                    index]),
+                                                            .contains(sku),
                                                     onChanged: (bool? value) {
                                                       setState(() {
                                                         if (value == true) {
                                                           selectedPlatformProducts
-                                                              .add(
-                                                                  platformProducts[
-                                                                      index]);
+                                                              .add(sku);
                                                         } else {
                                                           selectedPlatformProducts
-                                                              .remove(
-                                                                  platformProducts[
-                                                                      index]);
+                                                              .remove(sku);
                                                         }
                                                       });
                                                     },
                                                   ),
+                                                  if (sku['Images'].isNotEmpty)
+                                                    Image.network(
+                                                      sku['Images'][0],
+                                                      width: 100,
+                                                      height: 100,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (context,
+                                                          error, stackTrace) {
+                                                        return Icon(
+                                                            Icons.broken_image,
+                                                            size: 100);
+                                                      },
+                                                    )
+                                                  else
+                                                    Icon(
+                                                        Icons
+                                                            .image_not_supported,
+                                                        size: 100),
+                                                  SizedBox(width: 10),
                                                   Expanded(
                                                     child: Column(
                                                       crossAxisAlignment:
@@ -251,47 +278,24 @@ class _LinkProductPageState extends State<LinkProductPage> {
                                                               .start,
                                                       children: [
                                                         Text(
-                                                            'Item ID: ${product['item_id']}'),
+                                                            'SKU: ${sku['ShopSku']}'),
                                                         Text(
-                                                            'Name: ${product['attributes']['name']}'),
+                                                            'Quantity: ${sku['quantity']}'),
                                                         Text(
-                                                            'Short Description: \n$plainTextDescription'),
+                                                            'Status: ${sku['Status']}'),
+                                                        Text(
+                                                            'Price (MYR): ${sku['price'].toStringAsFixed(2)}'),
+                                                        Text(
+                                                            'Special Price (MYR): ${sku['special_price'].toStringAsFixed(2)}'),
                                                       ],
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                              SizedBox(height: 8.0),
-
-                                              // SKU-specific attributes
-                                              ...skus.map((sku) {
-                                                return Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 8.0),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                          'SKU: ${sku['ShopSku']}'),
-                                                      Text(
-                                                          'Quantity: ${sku['quantity']}'),
-                                                      Text(
-                                                          'Status: ${sku['Status']}'),
-                                                      Text(
-                                                          'Price (MYR): ${sku['price'].toStringAsFixed(2)}'),
-                                                      Text(
-                                                          'Special Price (MYR): ${sku['special_price'].toStringAsFixed(2)}'),
-                                                    ],
-                                                  ),
-                                                );
-                                              }).toList(),
-                                            ],
+                                            ),
                                           ),
-                                        ),
-                                      ),
+                                        );
+                                      }).toList(),
                                     );
                                   },
                                 ),
@@ -308,9 +312,8 @@ class _LinkProductPageState extends State<LinkProductPage> {
                 if (selectedSQLProduct != null) {
                   print("Selected SQL Product: ${selectedSQLProduct['id']}");
 
-                  List<Map<String, dynamic>> products = selectedPlatformProducts
-                      .expand((product) => product['skus'])
-                      .map((sku) {
+                  List<Map<String, dynamic>> products =
+                      selectedPlatformProducts.map((sku) {
                     return {
                       'stock_item_id': selectedSQLProduct['id'],
                       'price': sku['price'],
@@ -321,17 +324,18 @@ class _LinkProductPageState extends State<LinkProductPage> {
                     };
                   }).toList();
 
-// Print the products list for checking
+                  // Print the products list for checking
                   print('Products List:');
                   products.forEach((product) {
                     print(product);
                   });
+
                   Map<String, dynamic> requestBody = {
                     'store_id': 2, // Change according to store id
                     'products': products,
                   };
 
-// Print the requestBody for checking
+                  // Print the requestBody for checking
                   print('Request Body:');
                   print(requestBody);
 

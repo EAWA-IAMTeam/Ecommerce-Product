@@ -24,7 +24,7 @@ class _MappedProductsPageState extends State<MappedProductsPage> {
   Future<List<Map<String, dynamic>>> fetchProducts(int storeId) async {
     try {
       final response = await http.get(
-          Uri.parse('http://localhost:5000/api/products?store_id=$storeId'));
+          Uri.parse('http://192.168.0.73:5000/api/products?store_id=$storeId'));
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);

@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 )
 
 var client *iop.IopClient
@@ -24,48 +24,46 @@ func init() {
 	client.SetAccessToken("50000001c15clcgXddQ4nzUdiEt1974f9d1GYDRz9hYmQxcLoWqmqyaeubxzvXOK")
 }
 
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+func CORSMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Response().Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
 
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
+		if c.Request().Method == http.MethodOptions {
+			return c.NoContent(http.StatusNoContent)
 		}
 
-		c.Next()
+		return next(c)
 	}
 }
 
-func getProducts(c *gin.Context) {
+func getProducts(c echo.Context) error {
 	// client.AddAPIParam("limit", "10")
 	// client.AddAPIParam("offset", "0")
 
 	getResult, err := client.Execute("/products/get", "GET", nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products: " + err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch products: " + err.Error()})
 	}
 
-	c.JSON(http.StatusOK, getResult)
+	return c.JSON(http.StatusOK, getResult)
 }
 
 func main() {
-	r := gin.Default()
+	e := echo.New()
 
 	// Apply the CORS middleware
-	r.Use(CORSMiddleware())
+	e.Use(CORSMiddleware)
 
-	r.GET("/products", getProducts)
+	e.GET("/products", getProducts)
 
 	// Replace "0.0.0.0" with your machine's local IP address
-	serverAddress := "192.168.0.73:7000" // change according to your ip address and port	
+	serverAddress := "192.168.0.240:7000" // change according to your ip address and port
 
 	log.Printf("Server running on http://%s", serverAddress)
-	if err := r.Run(serverAddress); err != nil {
+	if err := e.Start(serverAddress); err != nil {
 		log.Fatal("Failed to run server: ", err)
 	}
 }
