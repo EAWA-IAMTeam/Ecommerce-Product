@@ -219,12 +219,6 @@ def api_insert_products():
 
         # Ensure each product has the necessary fields
         for product in products:
-            print(product.get('stock_item_id'))
-            print(product.get('price'))
-            print(product.get('discounted_price'))
-            print(product.get('sku'))
-            print(product.get('currency'))
-            print(product.get('status'))
             if not all(product.get(key) is not None for key in ['stock_item_id', 'price', 'discounted_price', 'sku', 'currency', 'status']):
                 return jsonify({'error': 'One or more products have missing fields'}), 400
 

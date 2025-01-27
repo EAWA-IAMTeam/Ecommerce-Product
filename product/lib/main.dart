@@ -69,7 +69,7 @@ class _LinkProductPageState extends State<LinkProductPage> {
 
   Future<void> fetchPlatformProducts() async {
     final response = await http.get(Uri.parse(
-        'http://192.168.0.73:7000/products')); //change according to server ip and port and endpoints
+        'http://192.168.0.240:7000/products')); //change according to server ip and port and endpoints
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
