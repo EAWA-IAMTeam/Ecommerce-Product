@@ -68,17 +68,21 @@ class _LinkProductPageState extends State<LinkProductPage> {
   }
 
   Future<void> fetchPlatformProducts() async {
-    final response = await http.get(Uri.parse(
-        'http://192.168.0.73:7000/products')); //change according to server ip and port and endpoints
+    try {
+      final response = await http.get(Uri.parse(
+          'http://192.168.0.240:7000/products')); //change according to server ip and port and endpoints
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      setState(() {
-        platformProducts = data['data']['products'];
-        filteredProducts = platformProducts;
-      });
-    } else {
-      print('Failed to load platform products');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          platformProducts = data['data']['products'];
+          filteredProducts = platformProducts;
+        });
+      } else {
+        print('Failed to load platform products: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching platform products: $e');
     }
   }
 
@@ -255,6 +259,22 @@ class _LinkProductPageState extends State<LinkProductPage> {
                                                   if (sku['Images'].isNotEmpty)
                                                     Image.network(
                                                       sku['Images'][0],
+                                                      width: 100,
+                                                      height: 100,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (context,
+                                                          error, stackTrace) {
+                                                        return Icon(
+                                                            Icons.broken_image,
+                                                            size: 100);
+                                                      },
+                                                    )
+                                                  else if (product['images'] !=
+                                                          null &&
+                                                      product['images']
+                                                          .isNotEmpty)
+                                                    Image.network(
+                                                      product['images'][0],
                                                       width: 100,
                                                       height: 100,
                                                       fit: BoxFit.cover,
