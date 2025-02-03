@@ -29,8 +29,16 @@ class _LinkProductPageState extends State<LinkProductPage> {
       searchQuery = query;
       filteredProducts = platformProducts.where((product) {
         final skus = product['skus'] as List<dynamic>;
+        final attributes = product['attributes'] as Map<String, dynamic>;
+
+        // Check for null and use empty string if null
+        final name = attributes['name']?.toLowerCase() ?? '';
+        final description = attributes['description']?.toLowerCase() ?? '';
+
         return skus.any((sku) =>
-            sku['ShopSku'].toLowerCase().contains(query.toLowerCase()));
+                sku['ShopSku'].toLowerCase().contains(query.toLowerCase())) ||
+            name.contains(query.toLowerCase()) ||
+            description.contains(query.toLowerCase());
       }).toList();
     });
   }

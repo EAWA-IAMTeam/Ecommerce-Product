@@ -33,7 +33,7 @@ class PlatformProductList extends StatelessWidget {
             child: TextField(
               onChanged: (query) => onSearch(query),
               decoration: InputDecoration(
-                labelText: 'Search by ShopSku',
+                labelText: 'SKU Search',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -46,6 +46,8 @@ class PlatformProductList extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final product = products[index];
                       final skus = product['skus'] as List<dynamic>;
+                      final attributes =
+                          product['attributes'] as Map<String, dynamic>;
 
                       return Column(
                         children: skus.map<Widget>((sku) {
@@ -98,7 +100,9 @@ class PlatformProductList extends StatelessWidget {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text('SKU: ${sku['ShopSku']}'),
-                                          Text('Quantity: ${sku['quantity']}'),
+                                          Text('Name: ${attributes['name']}'),
+                                          Text(
+                                              'Quantity: ${int.parse(sku['quantity'].toString())}'),
                                           Text('Status: ${sku['Status']}'),
                                           Text(
                                               'Price (MYR): ${sku['price'].toStringAsFixed(2)}'),
