@@ -7,7 +7,7 @@ class PlatformProductList extends StatelessWidget {
   final Function(dynamic) onSelect;
   final Function(String) onSearch;
 
-  PlatformProductList({
+  const PlatformProductList({super.key, 
     required this.products,
     required this.onFetch,
     required this.selectedProducts,

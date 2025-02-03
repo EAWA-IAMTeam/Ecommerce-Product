@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'config.dart';
 import 'services.dart';
 import 'sql_product.dart';
 import 'platform_product.dart';
 import 'MappedProductsPage.dart';
+import 'dart:html' as html;
 
 class LinkProductPage extends StatefulWidget {
+  const LinkProductPage({super.key});
+
   @override
   _LinkProductPageState createState() => _LinkProductPageState();
 }
@@ -62,7 +66,15 @@ class _LinkProductPageState extends State<LinkProductPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Link Product')),
+      appBar: AppBar(
+        title: Text('Link Product'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            html.window.location.href = 'http://localhost:3001';
+          },
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
