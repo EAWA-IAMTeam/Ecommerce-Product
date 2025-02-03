@@ -6,7 +6,7 @@ class SQLProductList extends StatelessWidget {
   final dynamic selectedProduct;
   final Function(dynamic) onSelect;
 
-  SQLProductList({
+  const SQLProductList({super.key, 
     required this.products,
     required this.onFetch,
     required this.selectedProduct,

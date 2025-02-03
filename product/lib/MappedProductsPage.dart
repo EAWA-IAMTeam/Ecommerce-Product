@@ -5,7 +5,7 @@ import 'dart:convert';
 class MappedProductsPage extends StatefulWidget {
   final int storeId; // Pass storeId as parameter to the page
 
-  MappedProductsPage({required this.storeId});
+  const MappedProductsPage({super.key, required this.storeId});
 
   @override
   _MappedProductsPageState createState() => _MappedProductsPageState();
