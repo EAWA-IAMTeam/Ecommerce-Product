@@ -40,8 +40,8 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>> fetchProducts(int storeId) async {
     try {
-      final response =
-          await http.get(Uri.parse('${Config.apiBaseUrl}/products/$storeId'));
+      final response = await http
+          .get(Uri.parse('${Config.apiBaseUrl}/products/store/$storeId'));
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
