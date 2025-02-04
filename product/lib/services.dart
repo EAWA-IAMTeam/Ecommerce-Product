@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'config.dart';
 
 class ApiService {
   static Future<List<dynamic>> fetchSQLProducts(String url) async {
@@ -39,8 +40,8 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>> fetchProducts(int storeId) async {
     try {
-      final response = await http
-          .get(Uri.parse('http://192.168.0.73:5000/api/products/$storeId'));
+      final response =
+          await http.get(Uri.parse('${Config.apiBaseUrl}/products/$storeId'));
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
