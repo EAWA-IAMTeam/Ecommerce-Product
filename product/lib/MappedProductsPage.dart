@@ -30,13 +30,21 @@ class _MappedProductsPageState extends State<MappedProductsPage> {
         List<dynamic> data = json.decode(response.body);
         return data.map((product) {
           return {
-            'id': product['id'],
-            'price': product['price'],
-            'discounted_price': product['discounted_price'],
-            'sku': product['sku'],
-            'currency': product['currency'],
-            'status': product['status'],
+            'quantity': product['quantity'],
+            'ref_cost': product['ref_cost'],
+            'ref_price': product['ref_price'],
             'stock_item_id': product['stock_item_id'],
+            'store_products': (product['store_products'] as List<dynamic>)
+                .map((storeProduct) {
+              return {
+                'id': storeProduct['id'],
+                'price': storeProduct['price'],
+                'discounted_price': storeProduct['discounted_price'],
+                'sku': storeProduct['sku'],
+                'currency': storeProduct['currency'],
+                'status': storeProduct['status'],
+              };
+            }).toList(),
           };
         }).toList();
       } else {
@@ -68,22 +76,33 @@ class _MappedProductsPageState extends State<MappedProductsPage> {
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
+                final storeProducts =
+                    product['store_products'] as List<dynamic>;
+
                 return Card(
                   margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: ListTile(
                     title: Text(
-                      'Product ID: ${product['id']}',
+                      'Store Product ID: ${product['stock_item_id']}',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Price: ${product['price']} MYR'),
-                        Text(
-                            'Discounted Price: ${product['discounted_price']} MYR'),
-                        Text('SKU: ${product['sku']}'),
-                        Text('Currency: ${product['currency']}'),
-                        Text('Status: ${product['status']}'),
+                        Text('Ref. Price: ${product['ref_price']} MYR'),
+                        Text('Ref. Cost: ${product['ref_cost']} MYR'),
+                        // Display SKUs for all store products
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: storeProducts.map<Widget>((storeProduct) {
+                            return Text('SKU: ${storeProduct['sku']}');
+                          }).toList(),
+                        ),
+                        // Display currency and status only once
+                        if (storeProducts.isNotEmpty) ...[
+                          Text('Currency: ${storeProducts[0]['currency']}'),
+                          Text('Status: ${storeProducts[0]['status']}'),
+                        ],
                         Text('Stock Item ID: ${product['stock_item_id']}'),
                       ],
                     ),

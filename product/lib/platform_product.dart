@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'services.dart';
 
 class PlatformProductList extends StatelessWidget {
   final List<dynamic> products;
@@ -7,7 +8,8 @@ class PlatformProductList extends StatelessWidget {
   final Function(dynamic) onSelect;
   final Function(String) onSearch;
 
-  const PlatformProductList({super.key, 
+  const PlatformProductList({
+    super.key,
     required this.products,
     required this.onFetch,
     required this.selectedProducts,
