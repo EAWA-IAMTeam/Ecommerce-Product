@@ -80,92 +80,143 @@ class _LinkProductPageState extends State<LinkProductPage> {
             html.window.location.href = 'http://localhost:3001';
           },
         ),
+        backgroundColor: Colors.purple,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Company ID: 10002', style: TextStyle(fontSize: 16)),
+            Text('Company ID: 10002',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             SizedBox(height: 20),
             Expanded(
               child: Row(
                 children: [
-                  SQLProductList(
-                    products: sqlProducts,
-                    onFetch: fetchSQLProducts,
-                    selectedProduct: selectedSQLProduct,
-                    onSelect: (product) => setState(() {
-                      selectedSQLProduct = product;
-                    }),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('SQL Inventory',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold)),
+                            IconButton(
+                              icon: Icon(Icons.refresh),
+                              onPressed: fetchSQLProducts,
+                            ),
+                          ],
+                        ),
+                        SQLProductList(
+                          products: sqlProducts,
+                          onFetch: fetchSQLProducts,
+                          selectedProduct: selectedSQLProduct,
+                          onSelect: (product) => setState(() {
+                            selectedSQLProduct = product;
+                          }),
+                        ),
+                      ],
+                    ),
                   ),
+                  SizedBox(width: 16),
                   VerticalDivider(),
-                  PlatformProductList(
-                    mappedProducts: filteredProducts
-                        .where((product) => product['skus']
-                            .any((sku) => sku['ShopSku'] != null))
-                        .toList(),
-                    unmappedProducts: filteredProducts
-                        .where((product) => product['skus']
-                            .any((sku) => sku['ShopSku'] != null))
-                        .toList(),
-                    onFetch: fetchPlatformProducts,
-                    selectedProducts: selectedPlatformProducts,
-                    onSelect: (sku) => setState(() {
-                      if (selectedPlatformProducts.contains(sku)) {
-                        selectedPlatformProducts.remove(sku);
-                      } else {
-                        selectedPlatformProducts.add(sku);
-                      }
-                    }),
-                    onSearch: updateSearchQuery,
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Platform Products',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold)),
+                            IconButton(
+                              icon: Icon(Icons.animation_rounded),
+                              onPressed: fetchPlatformProducts,
+                            ),
+                          ],
+                        ),
+                        PlatformProductList(
+                          mappedProducts: filteredProducts
+                              .where((product) => product['skus']
+                                  .any((sku) => sku['ShopSku'] != null))
+                              .toList(),
+                          unmappedProducts: filteredProducts
+                              .where((product) => product['skus']
+                                  .any((sku) => sku['ShopSku'] != null))
+                              .toList(),
+                          onFetch: fetchPlatformProducts,
+                          selectedProducts: selectedPlatformProducts,
+                          onSelect: (sku) => setState(() {
+                            if (selectedPlatformProducts.contains(sku)) {
+                              selectedPlatformProducts.remove(sku);
+                            } else {
+                              selectedPlatformProducts.add(sku);
+                            }
+                          }),
+                          onSearch: updateSearchQuery,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                if (selectedSQLProduct != null) {
-                  List<Map<String, dynamic>> products =
-                      selectedPlatformProducts.map((sku) {
-                    return {
-                      'stock_item_id': selectedSQLProduct['id'],
-                      'price': sku['price'],
-                      'discounted_price': sku['special_price'],
-                      'sku': sku['ShopSku'],
-                      'currency': Config.currency,
-                      'status':
-                          sku.containsKey('Status') ? sku['Status'] : 'Unknown',
-                    };
-                  }).toList();
+            SizedBox(height: 20),
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (selectedSQLProduct != null) {
+                        List<Map<String, dynamic>> products =
+                            selectedPlatformProducts.map((sku) {
+                          return {
+                            'stock_item_id': selectedSQLProduct['id'],
+                            'price': sku['price'],
+                            'discounted_price': sku['special_price'],
+                            'sku': sku['ShopSku'],
+                            'currency': Config.currency,
+                            'status': sku.containsKey('Status')
+                                ? sku['Status']
+                                : 'Unknown',
+                          };
+                        }).toList();
 
-                  Map<String, dynamic> requestBody = {
-                    'store_id': Config.storeId,
-                    'products': products,
-                  };
+                        Map<String, dynamic> requestBody = {
+                          'store_id': Config.storeId,
+                          'products': products,
+                        };
 
-                  try {
-                    await ApiService.mapProducts(
-                        Config.mapProductsUrl, requestBody);
-                    print('Products mapped successfully');
-                    await fetchPlatformProducts();
-                  } catch (e) {
-                    print(e);
-                  }
-                }
-              },
-              child: Text('Map'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        MappedProductsPage(storeId: Config.storeId),
+                        try {
+                          await ApiService.mapProducts(
+                              Config.mapProductsUrl, requestBody);
+                          print('Products mapped successfully');
+                          await fetchPlatformProducts();
+                        } catch (e) {
+                          print(e);
+                        }
+                      }
+                    },
+                    child: Text('Map'),
                   ),
-                );
-              },
-              child: Text('View Mapped Products'),
+                  SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              MappedProductsPage(storeId: Config.storeId),
+                        ),
+                      );
+                    },
+                    child: Text('View Mapped Products'),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

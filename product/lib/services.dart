@@ -15,7 +15,7 @@ class ApiService {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['updated_products'];
+      return data['unmapped_products'];
     } else {
       throw Exception('Failed to load platform products');
     }

@@ -23,14 +23,15 @@ class PlatformProductList extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Text(
-            'Platform Product',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          ElevatedButton(
-            onPressed: () => onFetch(),
-            child: Text('Fetch Platform Products'),
-          ),
+          // Text(
+          //   'Platform Product',
+          //   style: TextStyle(fontWeight: FontWeight.bold),
+          // ),
+          // ElevatedButton(
+          //   onPressed: () => onFetch(),
+          //   child: Text('Fetch Platform Products'),
+          // ),
+
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
