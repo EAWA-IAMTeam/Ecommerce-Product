@@ -16,9 +16,11 @@ class LinkProductPage extends StatefulWidget {
 class _LinkProductPageState extends State<LinkProductPage> {
   List<dynamic> sqlProducts = [];
   List<dynamic> platformProducts = [];
+  List<dynamic> mappedProducts = [];
+  List<dynamic> filteredProducts = [];
+  List<dynamic> filteredMappedProducts = [];
   dynamic selectedSQLProduct;
   Set<dynamic> selectedPlatformProducts = {};
-  List<dynamic> filteredProducts = [];
   String searchQuery = '';
 
   @override
@@ -29,44 +31,53 @@ class _LinkProductPageState extends State<LinkProductPage> {
 
   void updateSearchQuery(String query) {
     setState(() {
-      searchQuery = query;
+      searchQuery = query.toLowerCase();
+
+      // Filter unmapped products
       filteredProducts = platformProducts.where((product) {
-        final skus = product['skus'] as List<dynamic>;
-        final attributes = product['attributes'] as Map<String, dynamic>;
+        final skus = product['skus'] as List<dynamic>? ?? [];
+        final attributes = product['attributes'] as Map<String, dynamic>? ?? {};
 
         final name = attributes['name']?.toLowerCase() ?? '';
         final description = attributes['description']?.toLowerCase() ?? '';
 
-        return skus.any((sku) =>
-                sku['ShopSku'].toLowerCase().contains(query.toLowerCase())) ||
-            name.contains(query.toLowerCase()) ||
-            description.contains(query.toLowerCase());
+        return skus.any(
+                (sku) => sku['ShopSku'].toLowerCase().contains(searchQuery)) ||
+            name.contains(searchQuery) ||
+            description.contains(searchQuery);
+      }).toList();
+
+      // Filter mapped products
+      mappedProducts = mappedProducts.where((product) {
+        final skus = product['skus'] as List<dynamic>? ?? [];
+        final attributes = product['attributes'] as Map<String, dynamic>? ?? {};
+
+        final name = attributes['name']?.toLowerCase() ?? '';
+        final description = attributes['description']?.toLowerCase() ?? '';
+
+        return skus.any(
+                (sku) => sku['ShopSku'].toLowerCase().contains(searchQuery)) ||
+            name.contains(searchQuery) ||
+            description.contains(searchQuery);
       }).toList();
     });
   }
 
   Future<void> fetchSQLProducts() async {
-    try {
-      final products = await ApiService.fetchSQLProducts(Config.sqlProductsUrl);
-      setState(() {
-        sqlProducts = products;
-      });
-    } catch (e) {
-      print(e);
-    }
+    final products = await ApiService.fetchSQLProducts(Config.sqlProductsUrl);
+    setState(() {
+      sqlProducts = products;
+    });
   }
 
   Future<void> fetchPlatformProducts() async {
-    try {
-      final products =
-          await ApiService.fetchPlatformProducts(Config.platformProductsUrl);
-      setState(() {
-        platformProducts = products;
-        filteredProducts = platformProducts;
-      });
-    } catch (e) {
-      print(e);
-    }
+    final products =
+        await ApiService.fetchPlatformProducts(Config.platformProductsUrl);
+    setState(() {
+      platformProducts = products['unmapped_products'] ?? [];
+      mappedProducts = products['mapped_products'] ?? [];
+      filteredProducts = platformProducts;
+    });
   }
 
   @override
@@ -138,14 +149,8 @@ class _LinkProductPageState extends State<LinkProductPage> {
                           ],
                         ),
                         PlatformProductList(
-                          mappedProducts: filteredProducts
-                              .where((product) => product['skus']
-                                  .any((sku) => sku['ShopSku'] != null))
-                              .toList(),
-                          unmappedProducts: filteredProducts
-                              .where((product) => product['skus']
-                                  .any((sku) => sku['ShopSku'] != null))
-                              .toList(),
+                          mappedProducts: mappedProducts,
+                          unmappedProducts: filteredProducts,
                           onFetch: fetchPlatformProducts,
                           selectedProducts: selectedPlatformProducts,
                           onSelect: (sku) => setState(() {
@@ -179,9 +184,7 @@ class _LinkProductPageState extends State<LinkProductPage> {
                             'discounted_price': sku['special_price'],
                             'sku': sku['ShopSku'],
                             'currency': Config.currency,
-                            'status': sku.containsKey('Status')
-                                ? sku['Status']
-                                : 'Unknown',
+                            'status': sku.containsKey('status')
                           };
                         }).toList();
 
@@ -190,14 +193,10 @@ class _LinkProductPageState extends State<LinkProductPage> {
                           'products': products,
                         };
 
-                        try {
-                          await ApiService.mapProducts(
-                              Config.mapProductsUrl, requestBody);
-                          print('Products mapped successfully');
-                          await fetchPlatformProducts();
-                        } catch (e) {
-                          print(e);
-                        }
+                        await ApiService.mapProducts(
+                            Config.mapProductsUrl, requestBody);
+                        print('Products mapped successfully');
+                        await fetchPlatformProducts();
                       }
                     },
                     child: Text('Map'),

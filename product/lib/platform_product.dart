@@ -23,15 +23,6 @@ class PlatformProductList extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          // Text(
-          //   'Platform Product',
-          //   style: TextStyle(fontWeight: FontWeight.bold),
-          // ),
-          // ElevatedButton(
-          //   onPressed: () => onFetch(),
-          //   child: Text('Fetch Platform Products'),
-          // ),
-
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
@@ -43,61 +34,90 @@ class PlatformProductList extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: unmappedProducts.isEmpty
-                ? Center(child: Text('No Data'))
-                : ListView.builder(
-                    itemCount: unmappedProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = unmappedProducts[index];
-                      final skus = product['skus'] as List<dynamic>;
-                      final attributes =
-                          product['attributes'] as Map<String, dynamic>;
-                      final productImages = product['images'] ?? [];
-
-                      return Column(
-                        children: skus.map<Widget>((sku) {
-                          return GestureDetector(
-                            onTap: () => onSelect(sku),
-                            child: Card(
-                              margin: EdgeInsets.symmetric(vertical: 8.0),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Row(
-                                  children: [
-                                    Checkbox(
-                                      value: selectedProducts.contains(sku),
-                                      onChanged: (bool? value) {
-                                        onSelect(sku);
-                                      },
-                                    ),
-                                    _buildProductImage(sku, productImages),
-                                    SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text('SKU: ${sku['ShopSku']}'),
-                                          Text('Name: ${attributes['name']}'),
-                                          Text('Quantity: ${sku['quantity']}'),
-                                          Text('Price (MYR): ${sku['price']}'),
-                                          Text(
-                                              'Special Price (MYR): ${sku['special_price']}'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    },
-                  ),
+            child: ListView(
+              children: [
+                _buildProductSection('Unmapped Products', unmappedProducts,
+                    selectable: true),
+                _buildProductSection('Mapped Products', mappedProducts,
+                    selectable: false),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProductSection(String title, List<dynamic> products,
+      {bool selectable = true}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            title,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        products.isEmpty
+            ? Center(child: Text('No Data'))
+            : ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  final skus = product['skus'] as List<dynamic>;
+                  final attributes =
+                      product['attributes'] as Map<String, dynamic>;
+                  final productImages = product['images'] ?? [];
+
+                  return Column(
+                    children: skus.map<Widget>((sku) {
+                      return GestureDetector(
+                        onTap: selectable ? () => onSelect(sku) : null,
+                        child: Card(
+                          margin: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                if (selectable)
+                                  Checkbox(
+                                    value: selectedProducts.contains(sku),
+                                    onChanged: selectable
+                                        ? (bool? value) {
+                                            onSelect(sku);
+                                          }
+                                        : null,
+                                  ),
+                                _buildProductImage(sku, productImages),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('SKU: ${sku['ShopSku']}'),
+                                      Text('Name: ${attributes['name']}'),
+                                      Text('Quantity: ${sku['quantity']}'),
+                                      Text('Price (MYR): ${sku['price']}'),
+                                      Text(
+                                          'Special Price (MYR): ${sku['special_price']}'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+      ],
     );
   }
 
