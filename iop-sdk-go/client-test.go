@@ -25,10 +25,12 @@ const (
 // Define product structure
 type Product struct {
 	ItemID     int      `json:"item_id"`
+	Status     string   `json:"status"`
 	Images     []string `json:"images"` // List of product images
 	Skus       []Sku    `json:"skus"`
 	Attributes struct {
-		Name string `json:"name"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
 	} `json:"attributes"`
 }
 
@@ -65,7 +67,7 @@ func init() {
 }
 
 // Function to fetch SKUs to remove from the database
-func getSkusToRemove(storeID string) (map[string]bool, error) {
+func getStoreSkus(storeID string) (map[string]bool, error) {
 	// Database connection string
 	connStr := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 		host, port, dbname, user, password)
@@ -86,7 +88,7 @@ func getSkusToRemove(storeID string) (map[string]bool, error) {
 	defer rows.Close()
 
 	// Map to store SKUs to remove
-	skusToRemove := make(map[string]bool)
+	skus := make(map[string]bool)
 
 	// Read data from query result
 	for rows.Next() {
@@ -94,7 +96,7 @@ func getSkusToRemove(storeID string) (map[string]bool, error) {
 		if err := rows.Scan(&sku); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}
-		skusToRemove[sku] = true
+		skus[sku] = true
 	}
 
 	// Check for errors in iteration
@@ -102,7 +104,7 @@ func getSkusToRemove(storeID string) (map[string]bool, error) {
 		return nil, fmt.Errorf("error iterating rows: %v", err)
 	}
 
-	return skusToRemove, nil
+	return skus, nil
 }
 
 // API handler to get products
@@ -114,7 +116,7 @@ func getFilteredProducts(c echo.Context) error {
 	}
 
 	// Fetch SKUs to remove from database
-	skusToRemove, err := getSkusToRemove(storeID)
+	skusToRemove, err := getStoreSkus(storeID)
 	if err != nil {
 		log.Println("Error fetching SKUs: ", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve SKU list"})
@@ -143,8 +145,8 @@ func getFilteredProducts(c echo.Context) error {
 	}
 
 	// Lists for filtered products
-	var updatedProducts []Product // Products with at least one unremoved SKU
-	var removedProducts []Product // Products with at least one removed SKU
+	var unmappedProducts []Product // Products with at least one unremoved SKU
+	var mappedProducts []Product   // Products with at least one removed SKU
 
 	for _, product := range apiResponse.Data.Products {
 		var remainingSkus []Sku // SKUs that are **not** removed
@@ -162,37 +164,22 @@ func getFilteredProducts(c echo.Context) error {
 		if len(remainingSkus) > 0 {
 			updatedProduct := product
 			updatedProduct.Skus = remainingSkus
-			updatedProducts = append(updatedProducts, updatedProduct)
+			unmappedProducts = append(unmappedProducts, updatedProduct)
 		}
 
 		if len(removedSkus) > 0 {
 			removedProduct := product
 			removedProduct.Skus = removedSkus
-			removedProducts = append(removedProducts, removedProduct)
+			mappedProducts = append(mappedProducts, removedProduct)
 		}
 	}
 
 	// Return JSON response
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"updated_products": updatedProducts,
-		"removed_products": removedProducts,
+		"unmapped_products": unmappedProducts,
+		"mapped_products":   mappedProducts,
 	})
 }
-
-// func CORSMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-// 	return func(c echo.Context) error {
-// 		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-// 		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
-// 		c.Response().Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-// 		c.Response().Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
-
-// 		if c.Request().Method == http.MethodOptions {
-// 			return c.NoContent(http.StatusNoContent)
-// 		}
-
-// 		return next(c)
-// 	}
-// }
 
 func main() {
 	e := echo.New()
@@ -210,7 +197,7 @@ func main() {
 
 	// Start server
 	port := "7000"
-	address := "192.168.0.240:" + port
+	address := "192.168.0.73:" + port
 	fmt.Println("Server running on", address)
 	e.Logger.Fatal(e.Start(address))
 }

@@ -1,5 +1,4 @@
 import logging
-import datetime
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
 from argparse import ArgumentParser
@@ -128,6 +127,15 @@ def get_products(store_id):
         logging.error(f"Error connecting to PostgreSQL: {e}")
         return None
 
+def check_duplicate_sku(cursor, stock_item_id, sku):
+    """ Check if the SKU already exists for the same stock_item_id """
+    cursor.execute(
+        "SELECT COUNT(*) FROM storeproduct WHERE stock_item_id = %s AND sku = %s;",
+        (stock_item_id, sku)
+    )
+    count = cursor.fetchone()[0]
+    return count > 0  # Returns True if duplicate exists
+
 def insert_product(store_id, products):
     try:
         # Connect to your postgres DB
@@ -139,44 +147,46 @@ def insert_product(store_id, products):
             password="postgres"
         ) as connection:
             with connection.cursor() as cursor:
-                # Write the SQL query to insert data into the storeproduct table
                 query = """
-                    INSERT INTO storeproduct (store_id, stock_item_id, price, discounted_price, created_at, updated_at, sku, currency, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    INSERT INTO storeproduct (store_id, stock_item_id, price, discounted_price, sku, currency, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s);
                 """
                 
-                # Get the current timestamp
-                current_timestamp = datetime.datetime.now()
+                # List to store valid products
+                valid_products = []
+                duplicate_skus = []
 
-                # Prepare data for insertion
-                values = [
-                    (
-                        store_id,
-                        product['stock_item_id'],
-                        product['price'],
-                        product['discounted_price'],
-                        current_timestamp,  # Use current timestamp for created_at
-                        current_timestamp,  # Use current timestamp for updated_at
-                        product['sku'],
-                        product['currency'],
-                        product['status']
-                    )
-                    for product in products
-                ]
+                for product in products:
+                    stock_item_id = product['stock_item_id']
+                    sku = product['sku']
 
-                # Execute the query with multiple values
-                cursor.executemany(query, values)
+                    # Check for duplicate SKU
+                    if check_duplicate_sku(cursor, stock_item_id, sku):
+                        duplicate_skus.append(sku)
+                    else:
+                        valid_products.append((
+                            store_id,
+                            stock_item_id,
+                            product['price'],
+                            product['discounted_price'],
+                            sku,
+                            product['currency'],
+                            product['status']
+                        ))
 
-                # Commit the transaction
-                connection.commit()
+                # If there are valid products, insert them
+                if valid_products:
+                    cursor.executemany(query, valid_products)
+                    connection.commit()
+                    logging.info(f"{len(valid_products)} products inserted successfully.")
+                
+                return {"inserted": len(valid_products), "duplicates": duplicate_skus}
 
-                logging.info(f"{len(products)} products inserted successfully into storeproduct table.")
-                return True
-    except OperationalError as e:
+    except psycopg2.OperationalError as e:
         logging.error(f"Error connecting to PostgreSQL: {e}")
     except Exception as e:
         logging.error(f"Error: {e}")
-    return False
+    return {"inserted": 0, "duplicates": []}
 
 # API endpoints
 @app.route('/api/stock_items/company/<int:company_id>', methods=['GET'])
@@ -227,34 +237,33 @@ def api_shopeeAuth():
 @app.route('/api/products', methods=['POST'])
 def api_insert_products():
     try:
-        # Get JSON data from the request body
         data = request.get_json()
-
-        # Extract products list and store_id from the request
         store_id = data.get('store_id')
         products = data.get('products')
-        
-        print(products)
 
-        # Check if all required fields are provided
         if not store_id or not products or not isinstance(products, list):
             return jsonify({'error': 'Missing required fields or invalid products format'}), 400
 
-        # Ensure each product has the necessary fields
         for product in products:
             if not all(product.get(key) is not None for key in ['stock_item_id', 'price', 'discounted_price', 'sku', 'currency', 'status']):
                 return jsonify({'error': 'One or more products have missing fields'}), 400
 
-        # Call the insert function for multiple products
-        success = insert_product(store_id, products)
+        result = insert_product(store_id, products)
 
-        if success:
-            return jsonify({'message': f'{len(products)} products inserted successfully'}), 201
+        if result["inserted"] > 0:
+            return jsonify({
+                'message': f'{result["inserted"]} products inserted successfully',
+                'duplicates': result["duplicates"]
+            }), 201
         else:
-            return jsonify({'error': 'Failed to insert products'}), 500
+            return jsonify({
+                'error': 'Failed to insert products',
+                'duplicates': result["duplicates"]
+            }), 409 if result["duplicates"] else 500  # 409 Conflict if duplicates exist
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"Error in /api/products: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/products', methods=['GET'])
 def api_get_products():
@@ -273,5 +282,4 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port', default=5000, type=int, help='port to listen on')
     args = parser.parse_args()
     port = args.port
-
     app.run(debug=True, host='0.0.0.0', port=port)
