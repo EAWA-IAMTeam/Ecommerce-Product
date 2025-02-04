@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 // Database connection settings
@@ -23,20 +24,20 @@ const (
 
 // Define product structure
 type Product struct {
-    ItemID     int      `json:"item_id"`
-    Images     []string `json:"images"` // List of product images
-    Skus       []Sku    `json:"skus"`
-    Attributes struct {
-        Name string `json:"name"`
-    } `json:"attributes"`
+	ItemID     int      `json:"item_id"`
+	Images     []string `json:"images"` // List of product images
+	Skus       []Sku    `json:"skus"`
+	Attributes struct {
+		Name string `json:"name"`
+	} `json:"attributes"`
 }
 
 type Sku struct {
-	ShopSku      string  `json:"ShopSku"`
- 	Images     []string  `json:"Images"` // List of SKU images
-	Quantity     int     `json:"quantity"`
-	Price        float64 `json:"price"`
-	SpecialPrice float64 `json:"special_price"`
+	ShopSku      string   `json:"ShopSku"`
+	Images       []string `json:"Images"` // List of SKU images
+	Quantity     int      `json:"quantity"`
+	Price        float64  `json:"price"`
+	SpecialPrice float64  `json:"special_price"`
 }
 
 type ApiResponse struct {
@@ -178,8 +179,31 @@ func getFilteredProducts(c echo.Context) error {
 	})
 }
 
+// func CORSMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+// 	return func(c echo.Context) error {
+// 		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+// 		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
+// 		c.Response().Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+// 		c.Response().Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+
+// 		if c.Request().Method == http.MethodOptions {
+// 			return c.NoContent(http.StatusNoContent)
+// 		}
+
+// 		return next(c)
+// 	}
+// }
+
 func main() {
 	e := echo.New()
+
+	// Apply built-in CORS middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"*"}, // Change "*" to specific frontend URLs if needed
+		AllowMethods:     []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
+		AllowCredentials: true,
+	}))
 
 	// Define API routes
 	e.GET("/products", getFilteredProducts)

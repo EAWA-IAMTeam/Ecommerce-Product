@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class PlatformProductList extends StatelessWidget {
-  final List<dynamic> products;
+  final List<dynamic> mappedProducts;
+  final List<dynamic> unmappedProducts;
   final Function onFetch;
   final Set<dynamic> selectedProducts;
   final Function(dynamic) onSelect;
@@ -9,7 +10,8 @@ class PlatformProductList extends StatelessWidget {
 
   const PlatformProductList({
     super.key,
-    required this.products,
+    required this.mappedProducts,
+    required this.unmappedProducts,
     required this.onFetch,
     required this.selectedProducts,
     required this.onSelect,
@@ -40,15 +42,16 @@ class PlatformProductList extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: products.isEmpty
+            child: unmappedProducts.isEmpty
                 ? Center(child: Text('No Data'))
                 : ListView.builder(
-                    itemCount: products.length,
+                    itemCount: unmappedProducts.length,
                     itemBuilder: (context, index) {
-                      final product = products[index];
+                      final product = unmappedProducts[index];
                       final skus = product['skus'] as List<dynamic>;
                       final attributes =
                           product['attributes'] as Map<String, dynamic>;
+                      final productImages = product['images'] ?? [];
 
                       return Column(
                         children: skus.map<Widget>((sku) {
@@ -66,34 +69,7 @@ class PlatformProductList extends StatelessWidget {
                                         onSelect(sku);
                                       },
                                     ),
-                                    if (sku['Images'].isNotEmpty)
-                                      Image.network(
-                                        sku['Images'][0],
-                                        width: 100,
-                                        height: 100,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return Icon(Icons.broken_image,
-                                              size: 100);
-                                        },
-                                      )
-                                    else if (product['images'] != null &&
-                                        product['images'].isNotEmpty)
-                                      Image.network(
-                                        product['images'][0],
-                                        width: 100,
-                                        height: 100,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return Icon(Icons.broken_image,
-                                              size: 100);
-                                        },
-                                      )
-                                    else
-                                      Icon(Icons.image_not_supported,
-                                          size: 100),
+                                    _buildProductImage(sku, productImages),
                                     SizedBox(width: 10),
                                     Expanded(
                                       child: Column(
@@ -102,13 +78,10 @@ class PlatformProductList extends StatelessWidget {
                                         children: [
                                           Text('SKU: ${sku['ShopSku']}'),
                                           Text('Name: ${attributes['name']}'),
+                                          Text('Quantity: ${sku['quantity']}'),
+                                          Text('Price (MYR): ${sku['price']}'),
                                           Text(
-                                              'Quantity: ${int.parse(sku['quantity'].toString())}'),
-                                          Text('Status: ${sku['Status']}'),
-                                          Text(
-                                              'Price (MYR): ${sku['price'].toStringAsFixed(2)}'),
-                                          Text(
-                                              'Special Price (MYR): ${sku['special_price'].toStringAsFixed(2)}'),
+                                              'Special Price (MYR): ${sku['special_price']}'),
                                         ],
                                       ),
                                     ),
@@ -125,5 +98,33 @@ class PlatformProductList extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildProductImage(dynamic sku, List<dynamic> productImages) {
+    final skuImages = sku['Images'] ?? [];
+
+    if (skuImages.isNotEmpty) {
+      return Image.network(
+        skuImages[0],
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(Icons.broken_image, size: 100);
+        },
+      );
+    } else if (productImages.isNotEmpty) {
+      return Image.network(
+        productImages[0],
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(Icons.broken_image, size: 100);
+        },
+      );
+    } else {
+      return Icon(Icons.image_not_supported, size: 100);
+    }
   }
 }

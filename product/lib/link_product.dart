@@ -24,7 +24,7 @@ class _LinkProductPageState extends State<LinkProductPage> {
   @override
   void initState() {
     super.initState();
-    filteredProducts = platformProducts;
+    fetchSQLProducts();
   }
 
   void updateSearchQuery(String query) {
@@ -34,7 +34,6 @@ class _LinkProductPageState extends State<LinkProductPage> {
         final skus = product['skus'] as List<dynamic>;
         final attributes = product['attributes'] as Map<String, dynamic>;
 
-        // Check for null and use empty string if null
         final name = attributes['name']?.toLowerCase() ?? '';
         final description = attributes['description']?.toLowerCase() ?? '';
 
@@ -101,7 +100,14 @@ class _LinkProductPageState extends State<LinkProductPage> {
                   ),
                   VerticalDivider(),
                   PlatformProductList(
-                    products: filteredProducts,
+                    mappedProducts: filteredProducts
+                        .where((product) => product['skus']
+                            .any((sku) => sku['ShopSku'] != null))
+                        .toList(),
+                    unmappedProducts: filteredProducts
+                        .where((product) => product['skus']
+                            .any((sku) => sku['ShopSku'] != null))
+                        .toList(),
                     onFetch: fetchPlatformProducts,
                     selectedProducts: selectedPlatformProducts,
                     onSelect: (sku) => setState(() {
@@ -127,7 +133,8 @@ class _LinkProductPageState extends State<LinkProductPage> {
                       'discounted_price': sku['special_price'],
                       'sku': sku['ShopSku'],
                       'currency': Config.currency,
-                      'status': sku['Status'],
+                      'status':
+                          sku.containsKey('Status') ? sku['Status'] : 'Unknown',
                     };
                   }).toList();
 
@@ -140,6 +147,7 @@ class _LinkProductPageState extends State<LinkProductPage> {
                     await ApiService.mapProducts(
                         Config.mapProductsUrl, requestBody);
                     print('Products mapped successfully');
+                    await fetchPlatformProducts();
                   } catch (e) {
                     print(e);
                   }
