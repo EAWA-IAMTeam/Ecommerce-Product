@@ -24,6 +24,7 @@ const (
 // Define product structure
 type Product struct {
     ItemID     int      `json:"item_id"`
+    Status     string      `json:"status"`
     Images     []string `json:"images"` // List of product images
     Skus       []Sku    `json:"skus"`
     Attributes struct {
