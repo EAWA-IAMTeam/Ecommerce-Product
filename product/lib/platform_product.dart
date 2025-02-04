@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'services.dart';
 
 class PlatformProductList extends StatelessWidget {
   final List<dynamic> products;
