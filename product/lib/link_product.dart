@@ -207,8 +207,8 @@ class _LinkProductPageState extends State<LinkProductPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              MappedProductsPage(storeId: Config.storeId),
+                          builder: (context) => MappedProductsPage(
+                              storeId: int.parse(Config.storeId)),
                         ),
                       );
                     },
