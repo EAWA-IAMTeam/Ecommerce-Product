@@ -23,17 +23,17 @@ const (
 
 // Define product structure
 type Product struct {
-	ItemID     int    `json:"item_id"`
-	Skus       []Sku  `json:"skus"`
-	Attributes struct {
-		Name  string `json:"name"`
-		Image string `json:"images"` // Product image URL
-	} `json:"attributes"`
+    ItemID     int      `json:"item_id"`
+    Images     []string `json:"images"` // List of product images
+    Skus       []Sku    `json:"skus"`
+    Attributes struct {
+        Name string `json:"name"`
+    } `json:"attributes"`
 }
 
 type Sku struct {
 	ShopSku      string  `json:"ShopSku"`
-	ImageUrl     string  `json:"Url"` // SKU image URL
+ 	Images     []string  `json:"Images"` // List of SKU images
 	Quantity     int     `json:"quantity"`
 	Price        float64 `json:"price"`
 	SpecialPrice float64 `json:"special_price"`
