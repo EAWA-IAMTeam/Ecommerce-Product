@@ -179,7 +179,8 @@ class _LinkProductPageState extends State<LinkProductPage> {
                         List<Map<String, dynamic>> products =
                             selectedPlatformProducts.map((sku) {
                           return {
-                            'stock_item_id': selectedSQLProduct['id'],
+                            'stock_item_id':
+                                selectedSQLProduct['stock_item_id'],
                             'price': sku['price'],
                             'discounted_price': sku['special_price'],
                             'sku': sku['ShopSku'],
